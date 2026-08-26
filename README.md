@@ -1,56 +1,49 @@
-# Welcome to your Expo app 👋
+# Goodwe — demonstração de recarga elétrica
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Protótipo front-end em TypeScript e React Native Community CLI. O fluxo permite criar uma conta fictícia, escolher um carregador local, simular QR Code e pagamento e acompanhar uma recarga acelerada. Nenhuma autenticação, leitura, cobrança ou recarga real acontece.
 
-## Get started
+## Tecnologias
 
-1. Install dependencies
+- React Native 0.86.2 e React 19.2
+- React Navigation com rotas tipadas
+- `react-native-maps` no Android/iOS e mapa demonstrativo responsivo na web
+- `react-native-vision-camera` no Android/iOS e `getUserMedia` na web
+- React Native Web, Webpack, TypeScript, ESLint e Jest
 
-   ```bash
-   npm install
-   ```
+## Requisitos no Windows
 
-2. Start the app
+Instale Node compatível com React Native 0.86, JDK 17 e Android Studio com SDK, Platform Tools e um emulador. Configure `JAVA_HOME` e `ANDROID_HOME` (normalmente `%LOCALAPPDATA%\Android\Sdk`) e adicione `%ANDROID_HOME%\platform-tools` ao `PATH`.
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```powershell
+npm install
+npm start
+npm run android
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Para web:
 
-### Other setup steps
+```powershell
+npm run web
+npm run web:build
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Abra o endereço exibido pelo servidor no navegador. Para testar no Safari do iPhone, use o IP local do computador na mesma rede e permita a câmera quando solicitado; HTTPS pode ser necessário para `getUserMedia`. A web valida a interface compartilhada, mas não substitui um build iOS nativo. O iOS nativo exige macOS, CocoaPods e Xcode.
 
-## Learn more
+## Fluxo e dados
 
-To learn more about developing your project with Expo, look at the following resources:
+Cadastro/Login → Mapa → Detalhes → câmera ou fallback de 3 segundos → pagamento fictício → recarga acelerada → resumo → mapa.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Os carregadores ficam em `src/data/mockChargers.ts`; valores da simulação ficam em `src/constants/theme.ts`. As telas passam apenas `chargerId` e parâmetros simples. A câmera não fotografa, grava ou envia mídia. O cartão e o Pix são somente elementos visuais de demonstração.
 
-## Join the community
+## Verificações
 
-Join our community of developers creating universal apps.
+```powershell
+npm run typecheck
+npm run lint
+npm test
+npm run web:build
+cd android
+.\gradlew.bat assembleDebug
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Nunca adicione chaves de mapas ou credenciais ao repositório. Caso uma integração futura precise delas, use variáveis locais e mantenha somente um `.env.example` vazio de segredos.
