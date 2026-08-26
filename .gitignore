@@ -3,11 +3,9 @@
 # dependencies
 node_modules/
 
-# Expo
-.expo/
+# builds
 dist/
 web-build/
-expo-env.d.ts
 
 # Native
 .kotlin/
@@ -37,7 +35,3 @@ yarn-error.*
 *.tsbuildinfo
 
 example
-
-# generated native folders
-/ios
-/android
