@@ -1,49 +1,42 @@
-# Goodwe — demonstração de recarga elétrica
+# EMPS — aplicativo de mobilidade elétrica
 
-Protótipo front-end em TypeScript e React Native Community CLI. O fluxo permite criar uma conta fictícia, escolher um carregador local, simular QR Code e pagamento e acompanhar uma recarga acelerada. Nenhuma autenticação, leitura, cobrança ou recarga real acontece.
+Aplicativo em TypeScript e React Native Community CLI para localização de eletropostos, consulta de disponibilidade, leitura de QR Code, autorização de pagamento e acompanhamento da sessão de recarga.
 
 ## Tecnologias
 
-- React Native 0.86.2 e React 19.2
-- React Navigation com rotas tipadas
-- `react-native-maps` no Android/iOS e mapa demonstrativo responsivo na web
-- `react-native-vision-camera` no Android/iOS e `getUserMedia` na web
-- React Native Web, Webpack, TypeScript, ESLint e Jest
+- React Native Community CLI para Android e iOS
+- React Native Web e Webpack para validação no navegador
+- OpenStreetMap com Leaflet na web
+- OpenStreetMap com `react-native-maps` e `UrlTile` no aplicativo nativo
+- `react-native-vision-camera` para câmera e leitura de QR Code no Android/iOS
+- `BarcodeDetector` quando disponível no navegador
 
-## Requisitos no Windows
+## Como executar
 
-Instale Node compatível com React Native 0.86, JDK 17 e Android Studio com SDK, Platform Tools e um emulador. Configure `JAVA_HOME` e `ANDROID_HOME` (normalmente `%LOCALAPPDATA%\Android\Sdk`) e adicione `%ANDROID_HOME%\platform-tools` ao `PATH`.
-
-```powershell
+```bash
 npm install
-npm start
+npm run web
+```
+
+Abra `http://localhost:8080`.
+
+Para Android, inicie um emulador pelo Android Studio e execute:
+
+```bash
 npm run android
 ```
 
-Para web:
+## Configuração da tarifa
 
-```powershell
-npm run web
-npm run web:build
-```
-
-Abra o endereço exibido pelo servidor no navegador. Para testar no Safari do iPhone, use o IP local do computador na mesma rede e permita a câmera quando solicitado; HTTPS pode ser necessário para `getUserMedia`. A web valida a interface compartilhada, mas não substitui um build iOS nativo. O iOS nativo exige macOS, CocoaPods e Xcode.
-
-## Fluxo e dados
-
-Cadastro/Login → Mapa → Detalhes → câmera ou fallback de 3 segundos → pagamento fictício → recarga acelerada → resumo → mapa.
-
-Os carregadores ficam em `src/data/mockChargers.ts`; valores da simulação ficam em `src/constants/theme.ts`. As telas passam apenas `chargerId` e parâmetros simples. A câmera não fotografa, grava ou envia mídia. O cartão e o Pix são somente elementos visuais de demonstração.
+O valor oficial por kWh fica centralizado em `src/constants/theme.ts`, na constante `energyPricePerKwh`. Até que a tarifa seja definida, as telas exibem “Tarifa em atualização”.
 
 ## Verificações
 
-```powershell
+```bash
 npm run typecheck
 npm run lint
-npm test
+npm test -- --runInBand
 npm run web:build
-cd android
-.\gradlew.bat assembleDebug
 ```
 
-Nunca adicione chaves de mapas ou credenciais ao repositório. Caso uma integração futura precise delas, use variáveis locais e mantenha somente um `.env.example` vazio de segredos.
+As operações financeiras e de recarga desta versão são executadas em ambiente de homologação e não acionam bancos nem equipamentos físicos.

@@ -2,77 +2,87 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CameraSurface from '../components/CameraSurface';
-import { Button, DemoNotice } from '../components/UI';
-import { colors } from '../constants/theme';
+import { Button, EnvironmentNotice } from '../components/UI';
+import {
+  colors,
+  energyPricePerKwh,
+  formatCurrency,
+  formatEnergyPrice,
+} from '../constants/theme';
 import { findCharger } from '../data/mockChargers';
 import type { PaymentMethod, RootStackParamList } from '../types';
+
 export function CameraScreen({
   navigation,
   route,
 }: NativeStackScreenProps<RootStackParamList, 'Camera'>) {
-  const c = findCharger(route.params?.chargerId);
+  const charger = findCharger(route.params?.chargerId);
   const [denied, setDenied] = useState(false);
-  const [count, setCount] = useState(3);
-  const moved = useRef<boolean>(false);
+  const [detected, setDetected] = useState(false);
+  const moved = useRef(false);
   const go = useCallback(() => {
-    if (!moved.current && c) {
+    if (!moved.current && charger) {
       moved.current = true;
-      navigation.replace('Payment', { chargerId: c.id });
+      navigation.replace('Payment', { chargerId: charger.id });
     }
-  }, [c, navigation]);
-  useEffect(() => {
-    const id = setInterval(
-      () =>
-        setCount(v => {
-          if (v <= 1) {
-            clearInterval(id);
-            go();
-            return 0;
-          }
-          return v - 1;
-        }),
-      1000,
-    );
-    return () => clearInterval(id);
-  }, [go]);
-  if (!c)
+  }, [charger, navigation]);
+  const identify = useCallback(
+    (_value: string) => {
+      setDetected(true);
+      const timer = setTimeout(go, 650);
+      return () => clearTimeout(timer);
+    },
+    [go],
+  );
+
+  if (!charger) {
     return (
       <View style={s.center}>
-        <Text>Parâmetro de carregador inválido.</Text>
+        <Text>Eletroposto não identificado.</Text>
         <Button title="Voltar" onPress={() => navigation.goBack()} />
       </View>
     );
+  }
   return (
     <View style={s.camera}>
-      <CameraSurface onDenied={() => setDenied(true)} />
+      <CameraSurface onDenied={() => setDenied(true)} onDetected={identify} />
       <View style={s.overlay}>
-        <Text style={s.cameraTitle}>
-          Aponte a câmera para o QR Code do carregador
-        </Text>
-        <View style={s.frame} />
-        <Text style={s.count}>{count || 'Identificado!'}</Text>
-        {denied && (
-          <View style={s.denied}>
-            <Text style={s.white}>
-              Permissão negada ou câmera indisponível.
+        <View style={s.cameraHeader}>
+          <Text style={s.cameraEyebrow}>IDENTIFICAÇÃO DO ELETROPOSTO</Text>
+          <Text style={s.cameraTitle}>Aponte para o QR Code</Text>
+          <Text style={s.cameraStation}>{charger.name}</Text>
+        </View>
+        <View style={[s.frame, detected && s.frameDetected]}>
+          {detected && <Text style={s.detected}>✓</Text>}
+        </View>
+        <View style={s.cameraActions}>
+          {denied && (
+            <Text style={s.cameraMessage}>
+              Permita o uso da câmera no navegador ou nas configurações do
+              aparelho.
             </Text>
-            <Button title="Continuar simulação" onPress={go} />
-          </View>
-        )}
-        <Button
-          secondary
-          title="Cancelar"
-          onPress={() => navigation.goBack()}
-        />
+          )}
+          <Button
+            title="Confirmar identificação"
+            onPress={go}
+            label="Continuar após identificar o eletroposto"
+          />
+          <Button
+            secondary
+            title="Cancelar"
+            onPress={() => navigation.goBack()}
+          />
+        </View>
       </View>
     </View>
   );
 }
+
 export function PaymentScreen({
   navigation,
   route,
 }: NativeStackScreenProps<RootStackParamList, 'Payment'>) {
-  const c = findCharger(route.params?.chargerId);
+  const charger = findCharger(route.params?.chargerId);
   const [method, setMethod] = useState<PaymentMethod>();
   const [processing, setProcessing] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -82,93 +92,119 @@ export function PaymentScreen({
     },
     [],
   );
-  if (!c)
+  if (!charger) {
     return (
       <View style={s.center}>
-        <Text>Carregador não encontrado.</Text>
+        <Text>Eletroposto não encontrado.</Text>
       </View>
     );
+  }
+  const estimatedEnergy = 18;
+  const estimatedAmount =
+    energyPricePerKwh === null ? null : estimatedEnergy * energyPricePerKwh;
   const pay = () => {
     if (!method) return;
     setProcessing(true);
     timer.current = setTimeout(
-      () => navigation.replace('PaymentSuccess', { chargerId: c.id, method }),
-      2000,
+      () =>
+        navigation.replace('PaymentSuccess', { chargerId: charger.id, method }),
+      1200,
     );
   };
   return (
     <ScrollView contentContainerStyle={s.page}>
-      <Text style={s.title}>Pagamento fictício</Text>
+      <Text style={s.eyebrow}>AUTORIZAÇÃO DE RECARGA</Text>
+      <Text style={s.title}>Revise os dados</Text>
       <View style={s.summary}>
-        <Image source={c.image} style={s.thumb} />
-        <View>
-          <Text style={s.bold}>{c.name}</Text>
-          <Text>{c.address}</Text>
-          <Text>
-            {c.chargingType} · {c.powerKw} kW
+        <Image source={charger.image} style={s.thumb} />
+        <View style={s.summaryText}>
+          <Text style={s.bold}>{charger.name}</Text>
+          <Text style={s.muted}>{charger.address}</Text>
+          <Text style={s.summaryLine}>
+            {charger.chargingType} · {charger.connectorType} · {charger.powerKw}{' '}
+            kW
           </Text>
         </View>
       </View>
-      <Text style={s.price}>Valor demonstrativo: R$ 24,90</Text>
-      <DemoNotice>
-        Pagamento demonstrativo — nenhuma cobrança será realizada.
-      </DemoNotice>
-      {(['Cartão', 'Pix', 'Carteira digital'] as PaymentMethod[]).map(m => (
+      <View style={s.pricePanel}>
+        <Text style={s.priceLabel}>Tarifa</Text>
+        <Text style={s.price}>{formatEnergyPrice()}</Text>
+        <Text style={s.estimate}>
+          {estimatedAmount === null
+            ? 'O valor final será calculado após a definição da tarifa oficial.'
+            : `Estimativa para ${estimatedEnergy} kWh: ${formatCurrency(estimatedAmount)}`}
+        </Text>
+      </View>
+      <Text style={s.sectionTitle}>Forma de pagamento</Text>
+      {(['Cartão', 'Pix', 'Carteira digital'] as PaymentMethod[]).map(item => (
         <Button
-          key={m}
-          secondary={method !== m}
-          title={m}
-          onPress={() => setMethod(m)}
+          key={item}
+          secondary={method !== item}
+          title={item}
+          onPress={() => setMethod(item)}
         />
       ))}
-      {method === 'Cartão' && (
-        <View style={s.demo}>
-          <Text style={s.bold}>FELIPE TESTE</Text>
-          <Text>•••• •••• •••• 1234 · 12/30</Text>
-          <Text>Bandeira demonstrativa</Text>
+      {method && (
+        <View style={s.methodPanel}>
+          <Text style={s.methodIcon}>
+            {method === 'Cartão' ? '▰' : method === 'Pix' ? '◆' : '◉'}
+          </Text>
+          <View>
+            <Text style={s.bold}>{method} selecionado</Text>
+            <Text style={s.muted}>Pronto para autorizar a sessão</Text>
+          </View>
         </View>
       )}
-      {method === 'Pix' && (
-        <View style={s.demo}>
-          <Text style={s.fakeQr}>▦</Text>
-          <Text>QR Code ilustrativo — não abre banco.</Text>
-        </View>
-      )}
+      <EnvironmentNotice>
+        Ambiente de homologação: nenhuma cobrança bancária é efetuada nesta
+        versão.
+      </EnvironmentNotice>
       <Button
         disabled={!method || processing}
-        title={
-          processing
-            ? 'Processando pagamento fictício...'
-            : 'Confirmar pagamento fictício'
-        }
+        title={processing ? 'Autorizando...' : 'Autorizar e continuar'}
         onPress={pay}
       />
     </ScrollView>
   );
 }
+
 export function PaymentSuccessScreen({
   navigation,
   route,
 }: NativeStackScreenProps<RootStackParamList, 'PaymentSuccess'>) {
-  const c = findCharger(route.params?.chargerId);
-  if (!c) return null;
+  const charger = findCharger(route.params?.chargerId);
+  if (!charger) return null;
   return (
     <View style={s.success}>
-      <Text style={s.check}>✓</Text>
-      <Text style={s.title}>Pagamento concluído</Text>
-      <DemoNotice>Nenhuma cobrança aconteceu.</DemoNotice>
-      <Text style={s.bold}>{c.name}</Text>
-      <Text>Método: {route.params.method}</Text>
-      <Text>Operação fictícia: DEMO-{c.id.toUpperCase()}</Text>
+      <Image
+        source={require('../../assets/emps-logo.jpeg')}
+        style={s.successLogo}
+      />
+      <View style={s.checkCircle}>
+        <Text style={s.check}>✓</Text>
+      </View>
+      <Text style={s.title}>Sessão autorizada</Text>
+      <Text style={s.successText}>
+        Conecte o cabo ao veículo para iniciar a recarga.
+      </Text>
+      <View style={s.receipt}>
+        <Text style={s.bold}>{charger.name}</Text>
+        <Text style={s.muted}>Método: {route.params.method}</Text>
+        <Text style={s.muted}>Protocolo: EMPS-{charger.id.toUpperCase()}</Text>
+      </View>
+      <EnvironmentNotice>
+        Autorização registrada apenas no ambiente de homologação.
+      </EnvironmentNotice>
       <Button
         title="Iniciar recarga"
         onPress={() =>
-          navigation.replace('ChargingSession', { chargerId: c.id })
+          navigation.replace('ChargingSession', { chargerId: charger.id })
         }
       />
     </View>
   );
 }
+
 const s = StyleSheet.create({
   camera: { flex: 1, backgroundColor: '#000' },
   overlay: {
@@ -178,67 +214,152 @@ const s = StyleSheet.create({
     bottom: 0,
     left: 0,
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     padding: 22,
+    backgroundColor: '#0003',
   },
-  cameraTitle: {
-    color: '#fff',
+  cameraHeader: {
+    marginTop: 18,
+    backgroundColor: '#101419e8',
+    borderRadius: 16,
+    padding: 15,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 460,
+  },
+  cameraEyebrow: {
+    color: '#ff6c78',
+    fontSize: 11,
     fontWeight: '900',
-    fontSize: 19,
-    textAlign: 'center',
-    backgroundColor: '#0009',
-    padding: 10,
-    borderRadius: 10,
+    letterSpacing: 1.2,
   },
+  cameraTitle: { color: '#fff', fontWeight: '900', fontSize: 21, marginTop: 5 },
+  cameraStation: { color: '#cbd1d6', marginTop: 4 },
   frame: {
     width: 250,
     height: 250,
     borderWidth: 4,
     borderColor: colors.primary,
-    borderRadius: 24,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0001',
   },
-  count: { fontSize: 34, color: '#fff', fontWeight: '900' },
-  denied: { backgroundColor: '#000c', padding: 16, borderRadius: 14 },
-  white: { color: '#fff' },
+  frameDetected: { borderColor: colors.green, backgroundColor: '#14824a33' },
+  detected: { fontSize: 74, color: '#fff', fontWeight: '900' },
+  cameraActions: { width: '100%', maxWidth: 460 },
+  cameraMessage: {
+    color: '#fff',
+    textAlign: 'center',
+    backgroundColor: '#101419e8',
+    padding: 10,
+    borderRadius: 10,
+  },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
   },
-  page: { padding: 20, maxWidth: 620, width: '100%', alignSelf: 'center' },
+  page: {
+    padding: 20,
+    paddingBottom: 38,
+    maxWidth: 640,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  eyebrow: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    textAlign: 'center',
+    marginTop: 6,
+  },
   title: {
     fontSize: 28,
     fontWeight: '900',
     color: colors.ink,
     textAlign: 'center',
-    marginVertical: 12,
+    marginVertical: 10,
   },
   summary: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
+    backgroundColor: '#101419',
+    borderRadius: 19,
     padding: 14,
     flexDirection: 'row',
-    gap: 12,
+    gap: 13,
+    alignItems: 'center',
   },
-  thumb: { width: 80, height: 80, resizeMode: 'contain' },
-  bold: { fontWeight: '800', color: colors.ink },
-  price: { fontSize: 20, fontWeight: '800', marginTop: 18 },
-  demo: {
+  thumb: { width: 86, height: 78, resizeMode: 'contain', borderRadius: 11 },
+  summaryText: { flex: 1, gap: 4 },
+  summaryLine: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  bold: { fontWeight: '900', color: colors.ink },
+  muted: { color: colors.muted, lineHeight: 18 },
+  pricePanel: {
+    backgroundColor: colors.primarySoft,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#f7cbd0',
+    padding: 17,
+    marginTop: 14,
+  },
+  priceLabel: { color: colors.muted, fontWeight: '700' },
+  price: {
+    fontSize: 24,
+    color: colors.primary,
+    fontWeight: '900',
+    marginTop: 3,
+  },
+  estimate: { color: colors.inkSoft, marginTop: 7, lineHeight: 19 },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: colors.ink,
+    marginTop: 20,
+  },
+  methodPanel: {
     padding: 16,
     backgroundColor: '#fff',
     borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
     marginTop: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
-  fakeQr: { fontSize: 80 },
+  methodIcon: { fontSize: 28, color: colors.primary },
   success: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
     backgroundColor: colors.background,
-    gap: 12,
+    gap: 10,
   },
-  check: { fontSize: 70, color: colors.green, fontWeight: '900' },
+  successLogo: {
+    width: 150,
+    height: 70,
+    resizeMode: 'contain',
+    borderRadius: 12,
+  },
+  checkCircle: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: colors.greenSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  check: { fontSize: 50, color: colors.green, fontWeight: '900' },
+  successText: { textAlign: 'center', color: colors.muted, maxWidth: 360 },
+  receipt: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    gap: 5,
+  },
 });
