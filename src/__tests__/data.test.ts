@@ -4,18 +4,24 @@ import { simulationAt } from '../hooks/useChargingSimulation';
 
 describe('dados da rede EMPS', () => {
   it('pesquisa por nome, endereço e conector', () => {
-    expect(searchChargers('Paulista')).toHaveLength(1);
-    expect(searchChargers('EMPS')).toHaveLength(3);
-    expect(searchChargers('CCS 2')).toHaveLength(1);
+    expect(searchChargers('Aclimação')).toHaveLength(2);
+    expect(searchChargers('EMPS')).toHaveLength(6);
+    expect(searchChargers('CCS 2')).toHaveLength(6);
     expect(searchChargers('inexistente')).toEqual([]);
   });
 
   it('mantém informações operacionais consistentes', () => {
-    const charger = findCharger('emps-paulista');
-    expect(charger?.powerKw).toBe(22);
+    const charger = findCharger('emps-cambuci');
+    expect(charger?.powerKw).toBe(120);
     expect(charger?.availableConnectors).toBeLessThanOrEqual(
       charger?.totalConnectors ?? 0,
     );
+    expect(
+      searchChargers('EMPS').every(item => item.availableConnectors >= 3),
+    ).toBe(true);
+    expect(
+      searchChargers('EMPS').every(item => item.availableConnectors <= 5),
+    ).toBe(true);
   });
 
   it('mantém a tarifa sinalizada enquanto aguarda o valor oficial', () => {

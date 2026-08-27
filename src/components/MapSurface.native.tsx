@@ -16,10 +16,10 @@ export default function MapSurface({ chargers, selectedId, onSelect }: Props) {
         style={s.map}
         mapType={Platform.OS === 'android' ? 'none' : 'standard'}
         initialRegion={{
-          latitude: -23.57,
-          longitude: -46.66,
-          latitudeDelta: 0.16,
-          longitudeDelta: 0.16,
+          latitude: -23.572,
+          longitude: -46.6225,
+          latitudeDelta: 0.055,
+          longitudeDelta: 0.055,
         }}
       >
         <UrlTile

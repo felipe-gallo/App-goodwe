@@ -32,7 +32,7 @@ export default function MapSurface({ chargers, selectedId, onSelect }: Props) {
     const map = L.map(elementRef.current, {
       zoomControl: true,
       attributionControl: true,
-    }).setView([-23.57, -46.66], 13);
+    }).setView([-23.572, -46.6225], 14);
     const markers = markersRef.current;
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
