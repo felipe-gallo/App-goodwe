@@ -5,7 +5,7 @@ const empsLogo = require('../../assets/emps-logo.jpeg');
 export const mockChargers: Charger[] = [
   {
     id: 'emps-aclimacao',
-    name: 'EMPS Aclimação',
+    name: 'Eletroposto EMPS • Shell Aclimação',
     address: 'Av. da Aclimação, 11 — Aclimação, São Paulo — SP',
     image: empsLogo,
     latitude: -23.5668182,
@@ -25,7 +25,7 @@ export const mockChargers: Charger[] = [
   },
   {
     id: 'emps-pedra-azul',
-    name: 'EMPS Pedra Azul',
+    name: 'Eletroposto EMPS • Posto Pedra Azul',
     address: 'R. Pedra Azul, 670 — Aclimação, São Paulo — SP',
     image: empsLogo,
     latitude: -23.5771693,
@@ -45,7 +45,7 @@ export const mockChargers: Charger[] = [
   },
   {
     id: 'emps-cambuci',
-    name: 'EMPS Cambuci',
+    name: 'Eletroposto EMPS • Shell Cambuci',
     address: 'Largo do Cambuci, 172 — Cambuci, São Paulo — SP',
     image: empsLogo,
     latitude: -23.5636293,
@@ -65,7 +65,7 @@ export const mockChargers: Charger[] = [
   },
   {
     id: 'emps-vila-monumento',
-    name: 'EMPS Vila Monumento',
+    name: 'Eletroposto EMPS • Posto Vila Monumento',
     address: 'Av. Dom Pedro I, 297 — Vila Monumento, São Paulo — SP',
     image: empsLogo,
     latitude: -23.5677674,
@@ -85,7 +85,7 @@ export const mockChargers: Charger[] = [
   },
   {
     id: 'emps-jardim-da-gloria',
-    name: 'EMPS Jardim da Glória',
+    name: 'Eletroposto EMPS • Posto Xaranga',
     address: 'R. Coronel Diogo, 650 — Jardim da Glória, São Paulo — SP',
     image: empsLogo,
     latitude: -23.5783287,
@@ -105,7 +105,7 @@ export const mockChargers: Charger[] = [
   },
   {
     id: 'emps-lins',
-    name: 'EMPS Lins de Vasconcelos',
+    name: 'Eletroposto EMPS • Ipiranga Jardim da Glória',
     address:
       'Av. Lins de Vasconcelos, 1.867 — Jardim da Glória, São Paulo — SP',
     image: empsLogo,
