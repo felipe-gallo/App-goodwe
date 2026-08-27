@@ -320,7 +320,7 @@ const s = StyleSheet.create({
   },
   methodPanel: {
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
@@ -357,7 +357,7 @@ const s = StyleSheet.create({
   receipt: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     gap: 5,

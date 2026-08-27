@@ -91,6 +91,10 @@ export function MapScreen({
                     <Text style={s.resultAddress} numberOfLines={1}>
                       {charger.address}
                     </Text>
+                    <Text style={s.resultAvailability}>
+                      {charger.availableConnectors} de {charger.totalConnectors}{' '}
+                      conectores livres
+                    </Text>
                   </View>
                   <Text style={s.chevron}>›</Text>
                 </Pressable>
@@ -103,10 +107,10 @@ export function MapScreen({
       </View>
       <View style={s.mapLegend}>
         <Text style={s.legendTitle}>
-          {mockChargers.length} eletropostos próximos
+          {mockChargers.length} eletropostos na região
         </Text>
         <Text style={s.legendText}>
-          Toque em um marcador para abrir o painel
+          Toque em um marcador para consultar a ocupação
         </Text>
       </View>
       <QrButton
@@ -297,7 +301,7 @@ const s = StyleSheet.create({
   search: {
     height: 52,
     borderRadius: 15,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
@@ -314,7 +318,7 @@ const s = StyleSheet.create({
   },
   searchInput: { flex: 1, height: 50, color: colors.ink, fontSize: 15 },
   results: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 15,
     marginTop: 7,
     overflow: 'hidden',
@@ -343,6 +347,12 @@ const s = StyleSheet.create({
   resultText: { flex: 1 },
   resultTitle: { fontWeight: '900', color: colors.ink },
   resultAddress: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  resultAvailability: {
+    color: colors.green,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 3,
+  },
   chevron: { fontSize: 28, color: colors.primary },
   empty: { padding: 18, textAlign: 'center', color: colors.muted },
   mapLegend: {
@@ -415,7 +425,7 @@ const s = StyleSheet.create({
     flex: 1,
     minWidth: 95,
     borderRadius: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 13,
@@ -430,7 +440,7 @@ const s = StyleSheet.create({
   metricLabelAccent: { color: '#ffe7ea' },
   section: {
     borderRadius: 18,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 17,
@@ -445,7 +455,7 @@ const s = StyleSheet.create({
   track: {
     height: 11,
     borderRadius: 6,
-    backgroundColor: '#e7ebee',
+    backgroundColor: colors.border,
     overflow: 'hidden',
     marginVertical: 13,
   },
@@ -457,7 +467,7 @@ const s = StyleSheet.create({
     gap: 12,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#edf0f2',
+    borderBottomColor: colors.border,
   },
   infoIcon: {
     width: 40,
@@ -478,7 +488,7 @@ const s = StyleSheet.create({
   },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 13 },
   tag: {
-    backgroundColor: '#f0f3f5',
+    backgroundColor: colors.surfaceRaised,
     paddingHorizontal: 11,
     paddingVertical: 7,
     borderRadius: 99,

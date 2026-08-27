@@ -27,8 +27,10 @@ export default function App() {
           screenOptions={{
             headerBackTitle: 'Voltar',
             headerTintColor: colors.primary,
-            headerTitleStyle: { fontWeight: '800' },
+            headerStyle: { backgroundColor: colors.mapPanel },
+            headerTitleStyle: { fontWeight: '800', color: colors.ink },
             headerShadowVisible: false,
+            contentStyle: { backgroundColor: colors.background },
           }}
         >
           <Stack.Screen

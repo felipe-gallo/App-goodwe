@@ -130,7 +130,9 @@ export const ChargerCard = ({
       </Text>
       <View style={s.cardFooter}>
         <StatusPill status={charger.status} />
-        <Text style={s.power}>{charger.powerKw} kW</Text>
+        <Text style={s.power}>
+          {charger.availableConnectors}/{charger.totalConnectors} livres
+        </Text>
       </View>
     </View>
   </Pressable>
@@ -219,7 +221,7 @@ const s = StyleSheet.create({
     borderColor: '#f2d7a0',
     marginVertical: 12,
   },
-  noticeText: { color: '#6a4700', textAlign: 'center' },
+  noticeText: { color: '#f3d28f', textAlign: 'center' },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 18,
@@ -262,7 +264,7 @@ const s = StyleSheet.create({
   },
   availablePill: { backgroundColor: colors.greenSoft },
   in_usePill: { backgroundColor: colors.amberSoft },
-  offlinePill: { backgroundColor: '#eef0f2' },
+  offlinePill: { backgroundColor: colors.surfaceRaised },
   dot: { width: 7, height: 7, borderRadius: 4 },
   status: { fontWeight: '800', fontSize: 12 },
   available: { color: colors.green },

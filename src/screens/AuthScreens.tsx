@@ -30,9 +30,6 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
           style={s.logo}
           accessibilityLabel="Logotipo EMPS"
         />
-        <Text style={s.tagline}>
-          Mobilidade elétrica com energia e confiança
-        </Text>
       </View>
       <View style={s.panel}>{children}</View>
     </ScrollView>
@@ -137,10 +134,9 @@ const s = StyleSheet.create({
     borderTopRightRadius: 24,
     paddingTop: 18,
     paddingHorizontal: 22,
-    paddingBottom: 20,
+    paddingBottom: 12,
   },
   logo: { width: 220, height: 105, resizeMode: 'contain', alignSelf: 'center' },
-  tagline: { textAlign: 'center', color: '#d3d7db', marginTop: -4 },
   panel: {
     width: '100%',
     maxWidth: 500,
