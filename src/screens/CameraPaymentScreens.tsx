@@ -2,8 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CameraSurface from '../components/CameraSurface';
-import { Button, EnvironmentNotice } from '../components/UI';
+import { Button } from '../components/UI';
 import {
+  chargingPlans,
   colors,
   energyPricePerKwh,
   formatCurrency,
@@ -23,7 +24,7 @@ export function CameraScreen({
   const go = useCallback(() => {
     if (!moved.current && charger) {
       moved.current = true;
-      navigation.replace('Payment', { chargerId: charger.id });
+      navigation.replace('ChargingMode', { chargerId: charger.id });
     }
   }, [charger, navigation]);
   const identify = useCallback(
@@ -83,6 +84,7 @@ export function PaymentScreen({
   route,
 }: NativeStackScreenProps<RootStackParamList, 'Payment'>) {
   const charger = findCharger(route.params?.chargerId);
+  const selectedPlan = chargingPlans[route.params.plan];
   const [method, setMethod] = useState<PaymentMethod>();
   const [processing, setProcessing] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -99,7 +101,7 @@ export function PaymentScreen({
       </View>
     );
   }
-  const estimatedEnergy = 18;
+  const estimatedEnergy = selectedPlan.energyEstimateKwh;
   const estimatedAmount =
     energyPricePerKwh === null ? null : estimatedEnergy * energyPricePerKwh;
   const pay = () => {
@@ -107,7 +109,11 @@ export function PaymentScreen({
     setProcessing(true);
     timer.current = setTimeout(
       () =>
-        navigation.replace('PaymentSuccess', { chargerId: charger.id, method }),
+        navigation.replace('PaymentSuccess', {
+          chargerId: charger.id,
+          method,
+          plan: route.params.plan,
+        }),
       1200,
     );
   };
@@ -124,6 +130,7 @@ export function PaymentScreen({
             {charger.chargingType} · {charger.connectorType} · {charger.powerKw}{' '}
             kW
           </Text>
+          <Text style={s.planLine}>{selectedPlan.title}</Text>
         </View>
       </View>
       <View style={s.pricePanel}>
@@ -155,10 +162,6 @@ export function PaymentScreen({
           </View>
         </View>
       )}
-      <EnvironmentNotice>
-        Ambiente de homologação: nenhuma cobrança bancária é efetuada nesta
-        versão.
-      </EnvironmentNotice>
       <Button
         disabled={!method || processing}
         title={processing ? 'Autorizando...' : 'Autorizar e continuar'}
@@ -173,6 +176,7 @@ export function PaymentSuccessScreen({
   route,
 }: NativeStackScreenProps<RootStackParamList, 'PaymentSuccess'>) {
   const charger = findCharger(route.params?.chargerId);
+  const selectedPlan = chargingPlans[route.params.plan];
   if (!charger) return null;
   return (
     <View style={s.success}>
@@ -189,16 +193,17 @@ export function PaymentSuccessScreen({
       </Text>
       <View style={s.receipt}>
         <Text style={s.bold}>{charger.name}</Text>
+        <Text style={s.muted}>Modalidade: {selectedPlan.title}</Text>
         <Text style={s.muted}>Método: {route.params.method}</Text>
         <Text style={s.muted}>Protocolo: EMPS-{charger.id.toUpperCase()}</Text>
       </View>
-      <EnvironmentNotice>
-        Autorização registrada apenas no ambiente de homologação.
-      </EnvironmentNotice>
       <Button
         title="Iniciar recarga"
         onPress={() =>
-          navigation.replace('ChargingSession', { chargerId: charger.id })
+          navigation.replace('ChargingSession', {
+            chargerId: charger.id,
+            plan: route.params.plan,
+          })
         }
       />
     </View>
@@ -294,6 +299,7 @@ const s = StyleSheet.create({
   thumb: { width: 86, height: 78, resizeMode: 'contain', borderRadius: 11 },
   summaryText: { flex: 1, gap: 4 },
   summaryLine: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  planLine: { color: colors.primary, fontWeight: '900', fontSize: 12 },
   bold: { fontWeight: '900', color: colors.ink },
   muted: { color: colors.muted, lineHeight: 18 },
   pricePanel: {

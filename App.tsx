@@ -13,6 +13,7 @@ import {
   ChargingSessionScreen,
   ChargingCompleteScreen,
 } from './src/screens/ChargingScreens';
+import { ChargingModeScreen } from './src/screens/ChargingModeScreen';
 import { colors } from './src/constants/theme';
 import type { RootStackParamList } from './src/types';
 
@@ -57,6 +58,11 @@ export default function App() {
             name="Camera"
             component={CameraScreen}
             options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ChargingMode"
+            component={ChargingModeScreen}
+            options={{ title: 'Tipo de recarga' }}
           />
           <Stack.Screen
             name="Payment"

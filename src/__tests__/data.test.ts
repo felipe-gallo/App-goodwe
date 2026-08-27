@@ -1,6 +1,6 @@
 import { findCharger, searchChargers } from '../data/mockChargers';
 import { formatEnergyPrice } from '../constants/theme';
-import { simulationAt } from '../hooks/useChargingSimulation';
+import { sessionAt } from '../hooks/useChargingSession';
 
 describe('dados da rede EMPS', () => {
   it('pesquisa por nome, endereço e conector', () => {
@@ -29,14 +29,16 @@ describe('dados da rede EMPS', () => {
   });
 
   it('calcula bateria, tempo e energia dentro dos limites', () => {
-    const start = simulationAt(0, 22);
-    const middle = simulationAt(12, 22);
-    const end = simulationAt(99, 22);
+    const start = sessionAt(0, 22, 'fast');
+    const middle = sessionAt(12, 22, 'fast');
+    const end = sessionAt(99, 22, 'fast');
+    const full = sessionAt(99, 22, 'full');
     expect(start.battery).toBe(35);
     expect(middle.battery).toBeGreaterThan(start.battery);
     expect(middle.remainingMinutes).toBeLessThan(start.remainingMinutes);
     expect(middle.energyKwh).toBeGreaterThan(0);
     expect(end.battery).toBe(80);
+    expect(full.battery).toBe(100);
     expect(end.remainingMinutes).toBe(0);
     expect(end.status).toBe('completed');
   });

@@ -1,3 +1,5 @@
+import type { ChargingPlan } from '../types';
+
 export const colors = {
   primary: '#e30620',
   primaryDark: '#a90016',
@@ -19,9 +21,35 @@ export const colors = {
 
 export const chargingConfig = {
   initialBattery: 35,
-  targetBattery: 80,
-  durationSeconds: 24,
-  estimatedMinutes: 45,
+};
+
+export const chargingPlans: Record<
+  ChargingPlan,
+  {
+    title: string;
+    shortDescription: string;
+    targetBattery: number;
+    estimatedMinutes: number;
+    energyEstimateKwh: number;
+    durationSeconds: number;
+  }
+> = {
+  fast: {
+    title: 'Recarga rápida',
+    shortDescription: 'Mais agilidade para continuar o seu trajeto',
+    targetBattery: 80,
+    estimatedMinutes: 25,
+    energyEstimateKwh: 18,
+    durationSeconds: 24,
+  },
+  full: {
+    title: 'Recarga completa',
+    shortDescription: 'Maior autonomia para trajetos mais longos',
+    targetBattery: 100,
+    estimatedMinutes: 50,
+    energyEstimateKwh: 35,
+    durationSeconds: 36,
+  },
 };
 
 // Preencha este campo quando a tarifa oficial da EMPS for informada.

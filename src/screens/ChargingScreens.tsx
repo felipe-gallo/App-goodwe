@@ -1,18 +1,18 @@
 import React, { useCallback, useRef } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Button, EnvironmentNotice } from '../components/UI';
+import { Button } from '../components/UI';
 import {
-  chargingConfig,
+  chargingPlans,
   colors,
   energyPricePerKwh,
   formatCurrency,
 } from '../constants/theme';
 import { findCharger } from '../data/mockChargers';
 import {
-  type SimulationState,
-  useChargingSimulation,
-} from '../hooks/useChargingSimulation';
+  type SessionState,
+  useChargingSession,
+} from '../hooks/useChargingSession';
 import type { RootStackParamList } from '../types';
 
 const Stat = ({ label, value }: { label: string; value: string }) => (
@@ -27,9 +27,10 @@ export function ChargingSessionScreen({
   route,
 }: NativeStackScreenProps<RootStackParamList, 'ChargingSession'>) {
   const charger = findCharger(route.params?.chargerId);
+  const selectedPlan = chargingPlans[route.params.plan];
   const navigated = useRef(false);
   const done = useCallback(
-    (state: SimulationState) => {
+    (state: SessionState) => {
       if (charger && !navigated.current) {
         navigated.current = true;
         navigation.replace('ChargingComplete', {
@@ -38,13 +39,18 @@ export function ChargingSessionScreen({
             battery: state.battery,
             elapsedSeconds: state.elapsedSeconds,
             energyKwh: state.energyKwh,
+            plan: route.params.plan,
           },
         });
       }
     },
-    [charger, navigation],
+    [charger, navigation, route.params.plan],
   );
-  const { state, stop } = useChargingSimulation(charger?.powerKw || 22, done);
+  const { state, stop } = useChargingSession(
+    charger?.powerKw || 22,
+    route.params.plan,
+    done,
+  );
   if (!charger) return null;
 
   const finishEarly = () =>
@@ -65,6 +71,7 @@ export function ChargingSessionScreen({
                 battery: state.battery,
                 elapsedSeconds: state.elapsedSeconds,
                 energyKwh: state.energyKwh,
+                plan: route.params.plan,
                 stopped: true,
               },
             });
@@ -93,7 +100,7 @@ export function ChargingSessionScreen({
         <Text style={s.batteryLabel}>BATERIA DO VEÍCULO</Text>
         <Text style={s.percent}>{state.battery}%</Text>
         <Text style={s.target}>
-          Meta configurada: {chargingConfig.targetBattery}%
+          Meta configurada: {selectedPlan.targetBattery}%
         </Text>
         <View style={s.track}>
           <View style={[s.bar, { width: `${state.battery}%` }]} />
@@ -109,6 +116,7 @@ export function ChargingSessionScreen({
           value={`${state.energyKwh.toFixed(2)} kWh`}
         />
         <Stat label="Conector" value={charger.connectorType} />
+        <Stat label="Modalidade" value={selectedPlan.title} />
         <Stat
           label="Valor da sessão"
           value={
@@ -134,10 +142,6 @@ export function ChargingCompleteScreen({
     energyPricePerKwh === null ? null : summary.energyKwh * energyPricePerKwh;
   return (
     <ScrollView contentContainerStyle={s.complete}>
-      <Image
-        source={require('../../assets/emps-logo.jpeg')}
-        style={s.completeLogo}
-      />
       <View style={s.completeIcon}>
         <Text style={s.check}>✓</Text>
       </View>
@@ -146,6 +150,12 @@ export function ChargingCompleteScreen({
       </Text>
       <Text style={s.completeSubtitle}>Resumo da sessão em {charger.name}</Text>
       <View style={s.receipt}>
+        <View style={s.receiptRow}>
+          <Text style={s.receiptLabel}>Modalidade</Text>
+          <Text style={s.receiptValue}>
+            {chargingPlans[summary.plan].title}
+          </Text>
+        </View>
         <View style={s.receiptRow}>
           <Text style={s.receiptLabel}>Bateria final</Text>
           <Text style={s.receiptValue}>{summary.battery}%</Text>
@@ -165,9 +175,6 @@ export function ChargingCompleteScreen({
           </Text>
         </View>
       </View>
-      <EnvironmentNotice>
-        Dados e cobrança registrados apenas no ambiente de homologação.
-      </EnvironmentNotice>
       <Button
         title="Voltar ao mapa"
         onPress={() =>
@@ -275,12 +282,6 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
     backgroundColor: colors.background,
-  },
-  completeLogo: {
-    width: 140,
-    height: 66,
-    resizeMode: 'contain',
-    borderRadius: 11,
   },
   completeIcon: {
     width: 82,

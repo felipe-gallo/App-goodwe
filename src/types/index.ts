@@ -23,10 +23,12 @@ export type Charger = {
 };
 
 export type PaymentMethod = 'Cartão' | 'Pix' | 'Carteira digital';
+export type ChargingPlan = 'fast' | 'full';
 export type ChargingSummary = {
   battery: number;
   elapsedSeconds: number;
   energyKwh: number;
+  plan: ChargingPlan;
   stopped?: boolean;
 };
 export type RootStackParamList = {
@@ -35,8 +37,13 @@ export type RootStackParamList = {
   Map: undefined;
   ChargerDetails: { chargerId: string };
   Camera: { chargerId: string };
-  Payment: { chargerId: string };
-  PaymentSuccess: { chargerId: string; method: PaymentMethod };
-  ChargingSession: { chargerId: string };
+  ChargingMode: { chargerId: string };
+  Payment: { chargerId: string; plan: ChargingPlan };
+  PaymentSuccess: {
+    chargerId: string;
+    method: PaymentMethod;
+    plan: ChargingPlan;
+  };
+  ChargingSession: { chargerId: string; plan: ChargingPlan };
   ChargingComplete: { chargerId: string; summary: ChargingSummary };
 };

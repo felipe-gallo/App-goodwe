@@ -30,6 +30,10 @@ npm run android
 
 O valor oficial por kWh fica centralizado em `src/constants/theme.ts`, na constante `energyPricePerKwh`. Até que a tarifa seja definida, as telas exibem “Tarifa em atualização”.
 
+## Fluxo principal
+
+Cadastro → mapa → painel do eletroposto → QR Code → escolha entre recarga rápida ou completa → pagamento → sessão → resumo.
+
 ## Verificações
 
 ```bash
