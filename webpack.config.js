@@ -1,1 +1,38 @@
-const path=require('path');const HtmlWebpackPlugin=require('html-webpack-plugin');module.exports={entry:path.resolve(__dirname,'index.web.js'),output:{path:path.resolve(__dirname,'web-build'),filename:'bundle.js',clean:true},resolve:{extensions:['.web.tsx','.web.ts','.web.js','.tsx','.ts','.js'],alias:{'react-native$':'react-native-web'}},module:{rules:[{test:/\.[jt]sx?$/,exclude:/node_modules\/(?!(@react-navigation|react-native-safe-area-context|react-native-screens)\/).*/,type:'javascript/auto',use:{loader:'babel-loader',options:{presets:['module:@react-native/babel-preset']}}},{test:/\.(png|jpe?g|gif)$/i,type:'asset/resource'}]},plugins:[new HtmlWebpackPlugin({template:path.resolve(__dirname,'web/index.html')})],devServer:{historyApiFallback:true,host:'0.0.0.0',port:8080},performance:{hints:false}};
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+module.exports = {
+  entry: path.resolve(__dirname, 'index.web.js'),
+  output: {
+    path: path.resolve(__dirname, 'web-build'),
+    filename: 'bundle.js',
+    clean: true,
+  },
+  resolve: {
+    extensions: ['.web.tsx', '.web.ts', '.web.js', '.tsx', '.ts', '.js'],
+    alias: { 'react-native$': 'react-native-web' },
+  },
+  module: {
+    rules: [
+      {
+        test: /\.[jt]sx?$/,
+        exclude:
+          /node_modules\/(?!(@react-navigation|react-native-safe-area-context|react-native-screens)\/).*/,
+        type: 'javascript/auto',
+        use: {
+          loader: 'babel-loader',
+          options: { presets: ['module:@react-native/babel-preset'] },
+        },
+      },
+      { test: /\.css$/i, use: ['style-loader', 'css-loader'] },
+      { test: /\.(png|jpe?g|gif)$/i, type: 'asset/resource' },
+    ],
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, 'web/index.html'),
+    }),
+  ],
+  devServer: { historyApiFallback: true, host: '0.0.0.0', port: 8080 },
+  performance: { hints: false },
+};

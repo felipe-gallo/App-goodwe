@@ -1,5 +1,487 @@
-import React,{useMemo,useState} from 'react';import {Alert,Image,Pressable,ScrollView,StyleSheet,Text,TextInput,View} from 'react-native';import type {NativeStackScreenProps} from '@react-navigation/native-stack';import MapSurface from '../components/MapSurface';import {Button,ChargerCard,DemoNotice} from '../components/UI';import {colors} from '../constants/theme';import {findCharger,mockChargers,searchChargers} from '../data/mockChargers';import type {RootStackParamList} from '../types';
-const Qr=({onPress}:{onPress:()=>void})=><Pressable accessibilityRole="button" accessibilityLabel="Abrir leitor de QR Code" onPress={onPress} style={s.qr}><Text style={s.qrText}>▦  QR Code</Text></Pressable>;
-export function MapScreen({navigation}:NativeStackScreenProps<RootStackParamList,'Map'>){const[q,setQ]=useState('');const[selected,setSelected]=useState<string>();const list=useMemo(()=>searchChargers(q),[q]);const charger=selected?findCharger(selected):undefined;return <View style={s.fill}><View style={s.header}><View><Text style={s.brand}>GOODWE</Text><Text style={s.welcome}>Bem-vindo, Felipe</Text></View><View style={s.avatar}><Text style={s.avatarText}>FG</Text></View></View><View style={s.search}><TextInput accessibilityLabel="Pesquisar carregadores" value={q} onChangeText={setQ} placeholder="Pesquisar nome ou endereço" placeholderTextColor="#77818b" style={s.searchInput}/></View>{q!==''&&<View style={s.results}>{list.length?list.map(c=><Pressable key={c.id} onPress={()=>{setSelected(c.id);setQ('')}}><Text style={s.result}>{c.name} — {c.address}</Text></Pressable>):<Text style={s.result}>Nenhum carregador encontrado.</Text>}</View>}<MapSurface chargers={mockChargers} selectedId={selected} onSelect={setSelected}/>{charger&&<View style={s.preview}><ChargerCard charger={charger} onPress={()=>navigation.navigate('ChargerDetails',{chargerId:charger.id})}/></View>}<Qr onPress={()=>selected?navigation.navigate('Camera',{chargerId:selected}):Alert.alert('Escolha um carregador','Selecione um marcador antes de abrir o leitor.')}/></View>}
-export function ChargerDetailsScreen({navigation,route}:NativeStackScreenProps<RootStackParamList,'ChargerDetails'>){const c=findCharger(route.params?.chargerId);if(!c)return <View style={s.center}><Text>Carregador não encontrado.</Text><Button title="Voltar ao mapa" onPress={()=>navigation.navigate('Map')}/></View>;return <View style={s.fill}><ScrollView contentContainerStyle={s.details}><Image source={c.image} style={s.hero} accessibilityLabel={`Imagem de ${c.name}`}/><Text style={s.title}>{c.name}</Text><Text style={s.address}>{c.address}</Text><DemoNotice>Informações fictícias e ajustáveis para esta demonstração.</DemoNotice><View style={s.info}><Text style={s.infoText}>Status: {c.status==='available'?'Disponível':c.status==='in_use'?'Em uso':'Offline'}</Text><Text style={s.infoText}>{c.chargingType} · {c.connectorType}</Text><Text style={s.infoText}>Potência: {c.powerKw} kW · Distância: {c.distanceKm?.toFixed(1).replace('.',',')} km</Text><Text style={s.infoText}>Bateria fictícia do charger: {c.chargerBatteryLevel}%</Text><View style={s.track}><View style={[s.bar,{width:`${c.chargerBatteryLevel}%`}]}/></View><Text style={s.address}>{c.description}</Text></View><Button secondary title="Voltar" onPress={()=>navigation.goBack()}/></ScrollView><Qr onPress={()=>navigation.navigate('Camera',{chargerId:c.id})}/></View>}
-const s=StyleSheet.create({fill:{flex:1,backgroundColor:colors.background},header:{padding:18,paddingTop:22,backgroundColor:'#fff',flexDirection:'row',justifyContent:'space-between',alignItems:'center'},brand:{fontSize:22,fontWeight:'900',color:colors.primary},welcome:{color:colors.muted},avatar:{width:44,height:44,borderRadius:22,backgroundColor:colors.ink,alignItems:'center',justifyContent:'center'},avatarText:{color:'#fff',fontWeight:'900'},search:{backgroundColor:'#fff',paddingHorizontal:16,paddingBottom:12},searchInput:{height:48,borderWidth:1,borderColor:colors.border,borderRadius:14,paddingHorizontal:15,color:colors.ink},results:{position:'absolute',zIndex:5,top:128,left:16,right:16,backgroundColor:'#fff',borderRadius:12,padding:8,elevation:8},result:{padding:11,color:colors.ink,borderBottomWidth:1,borderBottomColor:'#eee'},preview:{position:'absolute',left:12,right:12,bottom:82},qr:{position:'absolute',bottom:18,alignSelf:'center',height:58,borderRadius:29,backgroundColor:colors.primary,paddingHorizontal:24,alignItems:'center',justifyContent:'center',elevation:9},qrText:{color:'#fff',fontSize:17,fontWeight:'900'},details:{padding:20,paddingBottom:100,maxWidth:680,width:'100%',alignSelf:'center'},hero:{height:210,width:'100%',resizeMode:'contain',backgroundColor:'#fff',borderRadius:20},title:{fontSize:27,fontWeight:'900',color:colors.ink,marginTop:16},address:{color:colors.muted,marginTop:6},info:{backgroundColor:'#fff',borderRadius:18,padding:18,gap:12},infoText:{fontSize:16,color:colors.ink,fontWeight:'700'},track:{height:12,borderRadius:6,backgroundColor:'#e6e9eb',overflow:'hidden'},bar:{height:'100%',backgroundColor:colors.green},center:{flex:1,alignItems:'center',justifyContent:'center',padding:20}});
+import React, { useMemo, useState } from 'react';
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import MapSurface from '../components/MapSurface';
+import { Button, StatusPill } from '../components/UI';
+import { colors, formatEnergyPrice } from '../constants/theme';
+import {
+  findCharger,
+  mockChargers,
+  searchChargers,
+} from '../data/mockChargers';
+import type { RootStackParamList } from '../types';
+
+const QrButton = ({ onPress }: { onPress: () => void }) => (
+  <Pressable
+    accessibilityRole="button"
+    accessibilityLabel="Abrir leitor de QR Code"
+    onPress={onPress}
+    style={({ pressed }) => [s.qr, pressed && s.pressed]}
+  >
+    <Text style={s.qrIcon}>▦</Text>
+    <Text style={s.qrText}>Escanear QR Code</Text>
+  </Pressable>
+);
+
+export function MapScreen({
+  navigation,
+}: NativeStackScreenProps<RootStackParamList, 'Map'>) {
+  const [query, setQuery] = useState('');
+  const list = useMemo(() => searchChargers(query), [query]);
+  const openStation = (chargerId: string) => {
+    setQuery('');
+    navigation.navigate('ChargerDetails', { chargerId });
+  };
+  return (
+    <View style={s.fill}>
+      <View style={s.header}>
+        <Image
+          source={require('../../assets/emps-logo.jpeg')}
+          style={s.headerLogo}
+          accessibilityLabel="EMPS"
+        />
+        <View style={s.headerText}>
+          <Text style={s.welcome}>Olá, Felipe</Text>
+          <Text style={s.headerSubtitle}>
+            Encontre energia para o seu trajeto
+          </Text>
+        </View>
+        <View style={s.avatar}>
+          <Text style={s.avatarText}>FG</Text>
+        </View>
+      </View>
+      <View style={s.mapWrap}>
+        <MapSurface chargers={mockChargers} onSelect={openStation} />
+      </View>
+      <View style={s.searchArea}>
+        <View style={s.search}>
+          <Text style={s.searchIcon}>⌕</Text>
+          <TextInput
+            accessibilityLabel="Pesquisar eletropostos"
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Pesquise por local ou conector"
+            placeholderTextColor="#7b858f"
+            style={s.searchInput}
+          />
+        </View>
+        {query !== '' && (
+          <View style={s.results}>
+            {list.length ? (
+              list.map(charger => (
+                <Pressable
+                  key={charger.id}
+                  accessibilityRole="button"
+                  onPress={() => openStation(charger.id)}
+                  style={s.resultRow}
+                >
+                  <View style={s.resultBolt}>
+                    <Text style={s.resultBoltText}>⚡</Text>
+                  </View>
+                  <View style={s.resultText}>
+                    <Text style={s.resultTitle}>{charger.name}</Text>
+                    <Text style={s.resultAddress} numberOfLines={1}>
+                      {charger.address}
+                    </Text>
+                  </View>
+                  <Text style={s.chevron}>›</Text>
+                </Pressable>
+              ))
+            ) : (
+              <Text style={s.empty}>Nenhum eletroposto encontrado.</Text>
+            )}
+          </View>
+        )}
+      </View>
+      <View style={s.mapLegend}>
+        <Text style={s.legendTitle}>
+          {mockChargers.length} eletropostos próximos
+        </Text>
+        <Text style={s.legendText}>
+          Toque em um marcador para abrir o painel
+        </Text>
+      </View>
+      <QrButton
+        onPress={() =>
+          navigation.navigate('Camera', { chargerId: mockChargers[0].id })
+        }
+      />
+    </View>
+  );
+}
+
+const Metric = ({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) => (
+  <View style={[s.metric, accent && s.metricAccent]}>
+    <Text style={[s.metricValue, accent && s.metricValueAccent]}>{value}</Text>
+    <Text style={[s.metricLabel, accent && s.metricLabelAccent]}>{label}</Text>
+  </View>
+);
+
+const InfoRow = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+}) => (
+  <View style={s.infoRow}>
+    <View style={s.infoIcon}>
+      <Text style={s.infoIconText}>{icon}</Text>
+    </View>
+    <View style={s.infoGrow}>
+      <Text style={s.infoLabel}>{label}</Text>
+      <Text style={s.infoValue}>{value}</Text>
+    </View>
+  </View>
+);
+
+export function ChargerDetailsScreen({
+  navigation,
+  route,
+}: NativeStackScreenProps<RootStackParamList, 'ChargerDetails'>) {
+  const charger = findCharger(route.params?.chargerId);
+  if (!charger) {
+    return (
+      <View style={s.center}>
+        <Text>Eletroposto não encontrado.</Text>
+        <Button
+          title="Voltar ao mapa"
+          onPress={() => navigation.navigate('Map')}
+        />
+      </View>
+    );
+  }
+  const occupied = charger.totalConnectors - charger.availableConnectors;
+  const occupancy = Math.round((occupied / charger.totalConnectors) * 100);
+  return (
+    <View style={s.fill}>
+      <ScrollView contentContainerStyle={s.details}>
+        <View style={s.hero}>
+          <Image
+            source={charger.image}
+            style={s.heroLogo}
+            accessibilityLabel="Logotipo EMPS"
+          />
+          <View style={s.heroContent}>
+            <StatusPill status={charger.status} />
+            <Text style={s.heroTitle}>{charger.name}</Text>
+            <Text style={s.heroAddress}>{charger.address}</Text>
+          </View>
+        </View>
+
+        <View style={s.metrics}>
+          <Metric
+            accent
+            value={`${charger.availableConnectors}/${charger.totalConnectors}`}
+            label="conectores livres"
+          />
+          <Metric value={`${occupancy}%`} label="ocupação atual" />
+          <Metric value={`${charger.powerKw} kW`} label="potência máxima" />
+        </View>
+
+        <View style={s.section}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Ocupação do eletroposto</Text>
+            <Text style={s.occupancyText}>{occupied} em uso</Text>
+          </View>
+          <View style={s.track}>
+            <View style={[s.bar, { width: `${occupancy}%` }]} />
+          </View>
+          <Text style={s.description}>{charger.description}</Text>
+        </View>
+
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Informações operacionais</Text>
+          <InfoRow icon="⌁" label="Endereço exato" value={charger.address} />
+          <InfoRow
+            icon="⚡"
+            label="Carregador"
+            value={`${charger.chargingType} · ${charger.connectorType}`}
+          />
+          <InfoRow
+            icon="◷"
+            label="Funcionamento"
+            value={charger.openingHours}
+          />
+          <InfoRow
+            icon="R$"
+            label="Tarifa de energia"
+            value={formatEnergyPrice()}
+          />
+          <InfoRow icon="E" label="Operador" value={charger.operator} />
+        </View>
+
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Comodidades</Text>
+          <View style={s.tags}>
+            {charger.amenities.map(item => (
+              <View key={item} style={s.tag}>
+                <Text style={s.tagText}>{item}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <Button
+          disabled={charger.status !== 'available'}
+          title={
+            charger.status === 'available'
+              ? 'Escanear QR Code e iniciar'
+              : 'Eletroposto indisponível no momento'
+          }
+          onPress={() =>
+            navigation.navigate('Camera', { chargerId: charger.id })
+          }
+        />
+        <Button
+          secondary
+          title="Voltar ao mapa"
+          onPress={() => navigation.goBack()}
+        />
+      </ScrollView>
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  fill: { flex: 1, backgroundColor: colors.background },
+  header: {
+    paddingHorizontal: 17,
+    paddingTop: 14,
+    paddingBottom: 13,
+    backgroundColor: colors.mapPanel,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    zIndex: 10,
+  },
+  headerLogo: { width: 78, height: 42, resizeMode: 'contain', borderRadius: 8 },
+  headerText: { flex: 1 },
+  welcome: { color: '#fff', fontSize: 17, fontWeight: '900' },
+  headerSubtitle: { color: '#aeb7bf', fontSize: 12, marginTop: 2 },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { color: '#fff', fontWeight: '900' },
+  mapWrap: { flex: 1, minHeight: 360, overflow: 'hidden' },
+  searchArea: {
+    position: 'absolute',
+    top: 82,
+    left: 14,
+    right: 14,
+    zIndex: 20,
+  },
+  search: {
+    height: 52,
+    borderRadius: 15,
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  searchIcon: {
+    fontSize: 28,
+    color: colors.ink,
+    marginRight: 8,
+    marginTop: -4,
+  },
+  searchInput: { flex: 1, height: 50, color: colors.ink, fontSize: 15 },
+  results: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    marginTop: 7,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    elevation: 9,
+  },
+  resultRow: {
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    gap: 10,
+  },
+  resultBolt: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resultBoltText: { fontSize: 16 },
+  resultText: { flex: 1 },
+  resultTitle: { fontWeight: '900', color: colors.ink },
+  resultAddress: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  chevron: { fontSize: 28, color: colors.primary },
+  empty: { padding: 18, textAlign: 'center', color: colors.muted },
+  mapLegend: {
+    position: 'absolute',
+    left: 14,
+    bottom: 88,
+    backgroundColor: '#111820ed',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  legendTitle: { color: '#fff', fontWeight: '900' },
+  legendText: { color: '#c5ccd2', fontSize: 12, marginTop: 2 },
+  qr: {
+    position: 'absolute',
+    bottom: 19,
+    alignSelf: 'center',
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 21,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.32,
+    shadowRadius: 12,
+    elevation: 9,
+  },
+  pressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
+  qrIcon: { color: '#fff', fontSize: 23, fontWeight: '900' },
+  qrText: { color: '#fff', fontSize: 15, fontWeight: '900' },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  details: {
+    padding: 18,
+    paddingBottom: 40,
+    maxWidth: 760,
+    width: '100%',
+    alignSelf: 'center',
+    gap: 14,
+  },
+  hero: {
+    minHeight: 210,
+    borderRadius: 22,
+    overflow: 'hidden',
+    backgroundColor: '#08090b',
+    padding: 20,
+    justifyContent: 'flex-end',
+  },
+  heroLogo: {
+    position: 'absolute',
+    right: -24,
+    top: 0,
+    width: 260,
+    height: 145,
+    resizeMode: 'contain',
+    opacity: 0.34,
+  },
+  heroContent: { gap: 7 },
+  heroTitle: { color: '#fff', fontSize: 28, fontWeight: '900' },
+  heroAddress: { color: '#c5ccd2', lineHeight: 20, maxWidth: 520 },
+  metrics: { flexDirection: 'row', gap: 9 },
+  metric: {
+    flex: 1,
+    minWidth: 95,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 13,
+  },
+  metricAccent: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  metricValue: { fontSize: 20, fontWeight: '900', color: colors.ink },
+  metricValueAccent: { color: '#fff' },
+  metricLabel: { fontSize: 11, color: colors.muted, marginTop: 4 },
+  metricLabelAccent: { color: '#ffe7ea' },
+  section: {
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 17,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionTitle: { fontSize: 17, fontWeight: '900', color: colors.ink },
+  occupancyText: { color: colors.muted, fontWeight: '700' },
+  track: {
+    height: 11,
+    borderRadius: 6,
+    backgroundColor: '#e7ebee',
+    overflow: 'hidden',
+    marginVertical: 13,
+  },
+  bar: { height: '100%', backgroundColor: colors.primary, borderRadius: 6 },
+  description: { color: colors.muted, lineHeight: 20 },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#edf0f2',
+  },
+  infoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoIconText: { color: colors.primary, fontWeight: '900' },
+  infoGrow: { flex: 1 },
+  infoLabel: { color: colors.muted, fontSize: 12 },
+  infoValue: {
+    color: colors.ink,
+    fontWeight: '800',
+    marginTop: 2,
+    lineHeight: 19,
+  },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 13 },
+  tag: {
+    backgroundColor: '#f0f3f5',
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 99,
+  },
+  tagText: { color: colors.inkSoft, fontSize: 12, fontWeight: '700' },
+});
