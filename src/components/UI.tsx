@@ -121,10 +121,13 @@ export const ChargerCard = ({
     <Image
       source={charger.image}
       style={s.thumb}
-      accessibilityLabel={`Logotipo de ${charger.name}`}
+      accessibilityLabel={`${charger.chargerName} ${charger.chargerModel}`}
     />
     <View style={s.grow}>
       <Text style={s.cardTitle}>{charger.name}</Text>
+      <Text style={s.chargerModel}>
+        {charger.chargerName} · {charger.chargerModel}
+      </Text>
       <Text style={s.muted} numberOfLines={2}>
         {charger.address}
       </Text>
@@ -246,6 +249,7 @@ const s = StyleSheet.create({
   },
   grow: { flex: 1, gap: 5 },
   cardTitle: { fontSize: 17, fontWeight: '900', color: colors.ink },
+  chargerModel: { color: colors.primary, fontSize: 12, fontWeight: '800' },
   muted: { color: colors.muted, lineHeight: 18 },
   cardFooter: {
     flexDirection: 'row',

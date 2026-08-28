@@ -10,6 +10,8 @@ export type Charger = {
   latitude: number;
   longitude: number;
   status: ChargerStatus;
+  chargerName: string;
+  chargerModel: string;
   chargingType: string;
   connectorType: string;
   powerKw: number;

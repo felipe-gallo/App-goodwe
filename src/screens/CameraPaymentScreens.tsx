@@ -127,8 +127,10 @@ export function PaymentScreen({
           <Text style={s.bold}>{charger.name}</Text>
           <Text style={s.muted}>{charger.address}</Text>
           <Text style={s.summaryLine}>
-            {charger.chargingType} · {charger.connectorType} · {charger.powerKw}{' '}
-            kW
+            {charger.chargerName} · {charger.chargerModel}
+          </Text>
+          <Text style={s.summaryLine}>
+            {charger.connectorType} · {charger.powerKw} kW
           </Text>
           <Text style={s.planLine}>{selectedPlan.title}</Text>
         </View>

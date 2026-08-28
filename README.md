@@ -34,6 +34,10 @@ O valor oficial por kWh fica centralizado em `src/constants/theme.ts`, na consta
 
 Cadastro → mapa → painel do eletroposto → QR Code → escolha entre recarga rápida ou completa → pagamento → sessão → resumo.
 
+## Rede de eletropostos
+
+O mapa apresenta oito unidades EMPS na região da Aclimação, Cambuci, Vila Monumento e Jardim da Glória. As unidades utilizam o carregador GoodWe HCA G2, modelo GW22K-HCA-20, com potência nominal de 22 kW e conector Tipo 2.
+
 ## Verificações
 
 ```bash

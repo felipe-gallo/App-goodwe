@@ -182,7 +182,7 @@ export function ChargerDetailsScreen({
           <Image
             source={charger.image}
             style={s.heroLogo}
-            accessibilityLabel="Logotipo EMPS"
+            accessibilityLabel={`${charger.chargerName} ${charger.chargerModel}`}
           />
           <View style={s.heroContent}>
             <StatusPill status={charger.status} />
@@ -218,7 +218,17 @@ export function ChargerDetailsScreen({
           <InfoRow
             icon="⚡"
             label="Carregador"
-            value={`${charger.chargingType} · ${charger.connectorType}`}
+            value={charger.chargerName}
+          />
+          <InfoRow
+            icon="G2"
+            label="Modelo e conexão"
+            value={`${charger.chargerModel} · ${charger.powerKw} kW · ${charger.connectorType}`}
+          />
+          <InfoRow
+            icon="AC"
+            label="Tecnologia de recarga"
+            value={charger.chargingType}
           />
           <InfoRow
             icon="◷"
@@ -410,12 +420,12 @@ const s = StyleSheet.create({
   },
   heroLogo: {
     position: 'absolute',
-    right: -24,
-    top: 0,
-    width: 260,
-    height: 145,
+    right: 8,
+    top: 4,
+    width: 190,
+    height: 205,
     resizeMode: 'contain',
-    opacity: 0.34,
+    opacity: 0.72,
   },
   heroContent: { gap: 7 },
   heroTitle: { color: '#fff', fontSize: 28, fontWeight: '900' },
