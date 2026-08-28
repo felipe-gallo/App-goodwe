@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import MapSurface from '../components/MapSurface';
+import { TariffPanel } from '../components/TariffPanel';
 import { Button, StatusPill } from '../components/UI';
-import { colors, formatEnergyPrice } from '../constants/theme';
+import { colors } from '../constants/theme';
 import {
   findCharger,
   mockChargers,
@@ -235,13 +236,10 @@ export function ChargerDetailsScreen({
             label="Funcionamento"
             value={charger.openingHours}
           />
-          <InfoRow
-            icon="R$"
-            label="Tarifa de energia"
-            value={formatEnergyPrice()}
-          />
           <InfoRow icon="E" label="Operador" value={charger.operator} />
         </View>
+
+        <TariffPanel />
 
         <View style={s.section}>
           <Text style={s.sectionTitle}>Comodidades</Text>

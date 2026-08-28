@@ -1,4 +1,5 @@
 import type { ChargingPlan } from '../types';
+import { getTariffPeriod, tariffConfig } from './tariff';
 
 export const colors = {
   primary: '#e30620',
@@ -52,16 +53,13 @@ export const chargingPlans: Record<
   },
 };
 
-// Preencha este campo quando a tarifa oficial da EMPS for informada.
-export const energyPricePerKwh: number | null = null;
-
 export const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
   }).format(value);
 
-export const formatEnergyPrice = () =>
-  energyPricePerKwh === null
-    ? 'Tarifa em atualização'
-    : `${formatCurrency(energyPricePerKwh)} / kWh`;
+export const formatEnergyPrice = (date = new Date()) => {
+  const period = getTariffPeriod(date);
+  return `${formatCurrency(tariffConfig.periods[period].pricePerKwh)} / kWh`;
+};

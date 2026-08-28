@@ -28,7 +28,14 @@ npm run android
 
 ## Configuração da tarifa
 
-O valor oficial por kWh fica centralizado em `src/constants/theme.ts`, na constante `energyPricePerKwh`. Até que a tarifa seja definida, as telas exibem “Tarifa em atualização”.
+Os horários, valores e regras ficam centralizados em `src/constants/tariff.ts`:
+
+- Fora de ponta: R$ 1,59/kWh
+- Intermediário: R$ 1,89/kWh
+- Ponta: R$ 2,19/kWh
+- Ativação: R$ 2,00, gratuita quando o subtotal de energia atinge R$ 20,00
+- Tolerância de ociosidade: 15 minutos
+- Ociosidade após a tolerância: R$ 0,50/minuto
 
 ## Fluxo principal
 

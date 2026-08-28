@@ -62,6 +62,13 @@ describe('tarifação EMPS', () => {
   });
 
   it('aplica ociosidade somente após os 15 minutos de tolerância', () => {
+    const withoutIdleInformation = calculateTariff(
+      10,
+      undefined,
+      weekdayAt(10),
+    );
+    expect(withoutIdleInformation.idleMinutes).toBeUndefined();
+    expect(withoutIdleInformation.idleFee).toBe(0);
     expect(calculateTariff(10, 14, weekdayAt(10)).idleFee).toBe(0);
     expect(calculateTariff(10, 15, weekdayAt(10)).idleFee).toBe(0);
     expect(calculateTariff(10, 16, weekdayAt(10)).idleFee).toBe(0.5);

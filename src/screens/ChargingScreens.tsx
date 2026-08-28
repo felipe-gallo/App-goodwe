@@ -5,9 +5,9 @@ import { Button } from '../components/UI';
 import {
   chargingPlans,
   colors,
-  energyPricePerKwh,
   formatCurrency,
 } from '../constants/theme';
+import { calculateTariff } from '../constants/tariff';
 import { findCharger } from '../data/mockChargers';
 import {
   type SessionState,
@@ -80,8 +80,7 @@ export function ChargingSessionScreen({
       ],
     );
 
-  const sessionCost =
-    energyPricePerKwh === null ? null : state.energyKwh * energyPricePerKwh;
+  const sessionTariff = calculateTariff(state.energyKwh);
   return (
     <ScrollView contentContainerStyle={s.page}>
       <View style={s.topbar}>
@@ -119,11 +118,7 @@ export function ChargingSessionScreen({
         <Stat label="Modalidade" value={selectedPlan.title} />
         <Stat
           label="Valor da sessão"
-          value={
-            sessionCost === null
-              ? 'Em atualização'
-              : formatCurrency(sessionCost)
-          }
+          value={formatCurrency(sessionTariff.total)}
         />
       </View>
       <Button secondary title="Encerrar sessão" onPress={finishEarly} />
@@ -138,8 +133,7 @@ export function ChargingCompleteScreen({
   const charger = findCharger(route.params?.chargerId);
   if (!charger) return null;
   const summary = route.params.summary;
-  const amount =
-    energyPricePerKwh === null ? null : summary.energyKwh * energyPricePerKwh;
+  const tariff = calculateTariff(summary.energyKwh, summary.idleMinutes);
   return (
     <ScrollView contentContainerStyle={s.complete}>
       <View style={s.completeIcon}>
@@ -168,11 +162,39 @@ export function ChargingCompleteScreen({
           <Text style={s.receiptLabel}>Energia fornecida</Text>
           <Text style={s.receiptValue}>{summary.energyKwh.toFixed(2)} kWh</Text>
         </View>
+        <View style={s.receiptRow}>
+          <Text style={s.receiptLabel}>Período tarifário</Text>
+          <Text style={s.receiptValue}>{tariff.periodLabel}</Text>
+        </View>
+        <View style={s.receiptRow}>
+          <Text style={s.receiptLabel}>Preço por kWh</Text>
+          <Text style={s.receiptValue}>
+            {formatCurrency(tariff.pricePerKwh)}
+          </Text>
+        </View>
+        <View style={s.receiptRow}>
+          <Text style={s.receiptLabel}>Subtotal da energia</Text>
+          <Text style={s.receiptValue}>
+            {formatCurrency(tariff.energySubtotal)}
+          </Text>
+        </View>
+        <View style={s.receiptRow}>
+          <Text style={s.receiptLabel}>Taxa de ativação</Text>
+          <Text style={s.receiptValue}>
+            {tariff.activationFee === 0
+              ? 'Grátis'
+              : formatCurrency(tariff.activationFee)}
+          </Text>
+        </View>
+        {tariff.idleMinutes !== undefined && (
+          <View style={s.receiptRow}>
+            <Text style={s.receiptLabel}>Taxa de ociosidade</Text>
+            <Text style={s.receiptValue}>{formatCurrency(tariff.idleFee)}</Text>
+          </View>
+        )}
         <View style={[s.receiptRow, s.receiptTotal]}>
           <Text style={s.receiptLabel}>Valor total</Text>
-          <Text style={s.totalValue}>
-            {amount === null ? 'Em atualização' : formatCurrency(amount)}
-          </Text>
+          <Text style={s.totalValue}>{formatCurrency(tariff.total)}</Text>
         </View>
       </View>
       <Button

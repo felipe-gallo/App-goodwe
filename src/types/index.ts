@@ -31,6 +31,7 @@ export type ChargingSummary = {
   elapsedSeconds: number;
   energyKwh: number;
   plan: ChargingPlan;
+  idleMinutes?: number;
   stopped?: boolean;
 };
 export type RootStackParamList = {

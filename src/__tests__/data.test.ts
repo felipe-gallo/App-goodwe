@@ -32,8 +32,10 @@ describe('dados da rede EMPS', () => {
     ).toBe(true);
   });
 
-  it('mantém a tarifa sinalizada enquanto aguarda o valor oficial', () => {
-    expect(formatEnergyPrice()).toBe('Tarifa em atualização');
+  it('formata a tarifa atual em real brasileiro', () => {
+    expect(formatEnergyPrice(new Date(2026, 7, 24, 10))).toBe(
+      'R$ 1,59 / kWh',
+    );
   });
 
   it('calcula bateria, tempo e energia dentro dos limites', () => {

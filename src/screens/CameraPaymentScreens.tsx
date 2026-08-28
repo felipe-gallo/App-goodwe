@@ -2,14 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CameraSurface from '../components/CameraSurface';
+import { TariffPanel } from '../components/TariffPanel';
 import { Button } from '../components/UI';
-import {
-  chargingPlans,
-  colors,
-  energyPricePerKwh,
-  formatCurrency,
-  formatEnergyPrice,
-} from '../constants/theme';
+import { chargingPlans, colors } from '../constants/theme';
 import { findCharger } from '../data/mockChargers';
 import type { PaymentMethod, RootStackParamList } from '../types';
 
@@ -102,8 +97,6 @@ export function PaymentScreen({
     );
   }
   const estimatedEnergy = selectedPlan.energyEstimateKwh;
-  const estimatedAmount =
-    energyPricePerKwh === null ? null : estimatedEnergy * energyPricePerKwh;
   const pay = () => {
     if (!method) return;
     setProcessing(true);
@@ -135,14 +128,8 @@ export function PaymentScreen({
           <Text style={s.planLine}>{selectedPlan.title}</Text>
         </View>
       </View>
-      <View style={s.pricePanel}>
-        <Text style={s.priceLabel}>Tarifa</Text>
-        <Text style={s.price}>{formatEnergyPrice()}</Text>
-        <Text style={s.estimate}>
-          {estimatedAmount === null
-            ? 'O valor final será calculado após a definição da tarifa oficial.'
-            : `Estimativa para ${estimatedEnergy} kWh: ${formatCurrency(estimatedAmount)}`}
-        </Text>
+      <View style={s.tariffWrap}>
+        <TariffPanel energyKwh={estimatedEnergy} />
       </View>
       <Text style={s.sectionTitle}>Forma de pagamento</Text>
       {(['Cartão', 'Pix', 'Carteira digital'] as PaymentMethod[]).map(item => (
@@ -304,22 +291,7 @@ const s = StyleSheet.create({
   planLine: { color: colors.primary, fontWeight: '900', fontSize: 12 },
   bold: { fontWeight: '900', color: colors.ink },
   muted: { color: colors.muted, lineHeight: 18 },
-  pricePanel: {
-    backgroundColor: colors.primarySoft,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#f7cbd0',
-    padding: 17,
-    marginTop: 14,
-  },
-  priceLabel: { color: colors.muted, fontWeight: '700' },
-  price: {
-    fontSize: 24,
-    color: colors.primary,
-    fontWeight: '900',
-    marginTop: 3,
-  },
-  estimate: { color: colors.inkSoft, marginTop: 7, lineHeight: 19 },
+  tariffWrap: { marginTop: 14 },
   sectionTitle: {
     fontSize: 17,
     fontWeight: '900',

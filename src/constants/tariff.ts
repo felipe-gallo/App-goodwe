@@ -7,7 +7,7 @@ export type TariffBreakdown = {
   energyKwh: number;
   energySubtotal: number;
   activationFee: number;
-  idleMinutes: number;
+  idleMinutes?: number;
   billableIdleMinutes: number;
   idleFee: number;
   total: number;
@@ -41,23 +41,23 @@ export const getTariffPeriod = (date = new Date()): TariffPeriod => {
 
 export const calculateTariff = (
   energyKwh: number,
-  idleMinutes = 0,
+  idleMinutes: number | undefined = undefined,
   date = new Date(),
 ): TariffBreakdown => {
   const period = getTariffPeriod(date);
   const periodConfig = tariffConfig.periods[period];
   const normalizedEnergy = Math.max(0, energyKwh);
-  const normalizedIdleMinutes = Math.max(0, idleMinutes);
-  const energySubtotal = roundCurrency(
-    normalizedEnergy * periodConfig.pricePerKwh,
-  );
+  const normalizedIdleMinutes =
+    idleMinutes === undefined ? undefined : Math.max(0, idleMinutes);
+  const rawEnergySubtotal = normalizedEnergy * periodConfig.pricePerKwh;
+  const energySubtotal = roundCurrency(rawEnergySubtotal);
   const activationFee =
     energySubtotal >= tariffConfig.activationWaiverSubtotal
       ? 0
       : tariffConfig.activationFee;
   const billableIdleMinutes = Math.max(
     0,
-    normalizedIdleMinutes - tariffConfig.idleGraceMinutes,
+    (normalizedIdleMinutes ?? 0) - tariffConfig.idleGraceMinutes,
   );
   const idleFee = roundCurrency(
     billableIdleMinutes * tariffConfig.idleFeePerMinute,
