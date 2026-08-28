@@ -1,6 +1,6 @@
 import type { Charger } from '../types';
 
-const hcaG2Image = require('../../assets/goodwe-hca-g2-red.png');
+const hcaG2Image = require('../../assets/goodwe-hca-g2.png');
 
 const goodWeHcaG2: Pick<
   Charger,

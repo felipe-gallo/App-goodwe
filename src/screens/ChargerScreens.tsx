@@ -227,11 +227,6 @@ export function ChargerDetailsScreen({
             value={`${charger.chargerModel} · ${charger.powerKw} kW · ${charger.connectorType}`}
           />
           <InfoRow
-            icon="AC"
-            label="Tecnologia de recarga"
-            value={charger.chargingType}
-          />
-          <InfoRow
             icon="◷"
             label="Funcionamento"
             value={charger.openingHours}
